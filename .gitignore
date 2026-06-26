@@ -1,0 +1,7 @@
+venv311/
+myenv/
+.env
+__pycache__/
+*.pyc
+nagarseva.db
+.streamlit/secrets.toml
