@@ -1,22 +1,22 @@
 # Streamlit - UI
-streamlit==1.35.0
+streamlit
 
 # Google Gemini
-google-generativeai==0.7.2
+google-generativeai
 
 # LangChain + LangGraph
-langchain==0.2.6
-langchain-google-genai==1.0.7
-langgraph==0.1.19
+langchain
+langchain-google-genai
+langgraph
 
 # Image processing
-pillow==10.4.0
+pillow
 
 # Charts
-plotly==5.22.0
+plotly
 
 # Database
-# SQLite - built-in Python mein hai, install nahi karna!
+# SQLite 
 
 # Environment variables
 python-dotenv

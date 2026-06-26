@@ -1,22 +1,46 @@
+"""
+LangGraph agent pipeline for NagarSeva AI.
+
+Flow:
+  START → vision → validate ─(civic?)─→ categorize → impact → hinglish → END
+                              └(not civic)──────────────────────────────→ END
+
+Model setup:
+  - Vision  : Gemini (google-generativeai) — handles the image directly.
+  - Text    : Groq (testing) — categorize / impact / hinglish.
+  ⚠️ DEPLOY: switch `llm` to ChatGoogleGenerativeAI("gemini-2.5-flash-lite").
+
+Duplicate detection runs OUTSIDE the graph (in app.py at save time), because
+it needs the database which is a UI-side concern.
+"""
+
 import json
-import re
 import os
 from typing import TypedDict
+
 from dotenv import load_dotenv
 from langgraph.graph import StateGraph, START, END
-from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import JsonOutputParser, StrOutputParser
-from PIL import Image
 import google.generativeai as genai
+
+# ── Testing model (Groq). DEPLOY: comment this out, use the Gemini line below. ──
+from langchain_groq import ChatGroq
 
 load_dotenv()
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
-# Text + Vision ke liye alag models
-llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash-lite")
+# TESTING — Groq for text nodes
+llm = ChatGroq(model="llama-3.3-70b-versatile", temperature=0)
 
-# ─── State ────────────────────────────────────────────────────────────────────
+# DEPLOY — uncomment these two lines and remove the Groq line above:
+# from langchain_google_genai import ChatGoogleGenerativeAI
+# llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash-lite", temperature=0)
+
+VISION_MODEL = "gemini-2.5-flash-lite"
+
+
+# ─── State ─────────────────────────────────────────────────────────────────────
 class IssueState(TypedDict):
     image: object
     is_civic_issue: bool
@@ -39,78 +63,96 @@ class IssueState(TypedDict):
     hinglish_summary: str
     error: str
 
-# ─── Node 1: Vision ───────────────────────────────────────────────────────────
+
+def _extract_json(text: str) -> dict:
+    text = text.strip()
+    start = text.find("{")
+    end = text.rfind("}") + 1
+    if start != -1 and end != 0:
+        text = text[start:end]
+    return json.loads(text)
+
+
+# ─── Node 1: Vision (Gemini) ───────────────────────────────────────────────────
 def vision_node(state: IssueState) -> IssueState:
-    print("🔍 Vision Node chal raha hai...")
+    print("🔍 Vision Node...")
     try:
-        # Vision ke liye google-generativeai directly use karo
-        vision_model = genai.GenerativeModel("gemini-2.5-flash-lite")
-        
-        prompt = """Analyze this image. Return ONLY this JSON:
+        model = genai.GenerativeModel(VISION_MODEL)
+        prompt = """Analyze this image for a civic issue reporting system in India.
+Return ONLY this JSON, no extra text:
 {
   "issue_title": "short title",
-  "description": "2-3 sentence description",
-  "location_hints": "any visible location clues or Not visible",
+  "description": "2-3 sentence description of the problem",
+  "location_hints": "any visible location clues, or 'Not visible'",
   "is_civic_issue": true
 }
-No extra text. Only JSON."""
-        
-        response = vision_model.generate_content([prompt, state["image"]])
-        text = response.text.strip()
-        start = text.find("{")
-        end = text.rfind("}") + 1
-        data = json.loads(text[start:end])
-        
+If there is no civic issue in the image, set is_civic_issue to false."""
+        response = model.generate_content([prompt, state["image"]])
+        data = _extract_json(response.text)
         return {
             **state,
             "is_civic_issue": data.get("is_civic_issue", False),
             "issue_title": data.get("issue_title", ""),
             "description": data.get("description", ""),
             "location_hints": data.get("location_hints", "Not visible"),
-            "error": ""
+            "error": "",
         }
     except Exception as e:
         return {**state, "error": str(e), "is_civic_issue": False}
 
-# ─── Node 2: Validate ─────────────────────────────────────────────────────────
+
+# ─── Node 2: Validate ──────────────────────────────────────────────────────────
 def validate_node(state: IssueState) -> IssueState:
-    print("✅ Validate Node chal raha hai...")
+    print("✅ Validate Node...")
     return state
+
 
 def is_civic(state: IssueState) -> str:
     if state.get("is_civic_issue") and not state.get("error"):
         return "yes"
     return "no"
 
-# ─── Node 3: Categorize — JsonOutputParser use kar raha hai ───────────────────
+
+# ─── Node 3: Categorize (Groq/Gemini) ──────────────────────────────────────────
 def categorize_node(state: IssueState) -> IssueState:
-    print("🏷️ Categorize Node chal raha hai...")
+    print("🏷️ Categorize Node...")
     try:
         prompt = ChatPromptTemplate.from_template("""
-You are a civic issue classifier for Indian cities.
+You are a civic issue classifier for Delhi, India.
 
 Issue: {issue_title}
 Description: {description}
 
+Use this STRICT department mapping:
+- Potholes, road damage, broken roads, footpaths → "PWD"
+- Garbage, waste, sanitation, dirty areas → "MCD"
+- Water leakage, pipe burst, sewage, drainage → "DJB"
+- Streetlight, electricity, power, wires → "BSES"
+- Traffic, illegal parking, encroachment → "Delhi Police"
+
+Category mapping:
+- Potholes/roads/footpaths → "Road"
+- Garbage/waste → "Garbage"
+- Water/sewage → "Water Supply"
+- Streetlight/power → "Electricity"
+- Waterlogging → "Waterlogging"
+- Anything else → "Other"
+
 Return ONLY this JSON:
 {{
-  "category": "Road/Water Supply/Garbage/Electricity/Street Lighting/Waterlogging/Other",
+  "category": "pick from above",
   "severity": "Low/Medium/High/Critical",
   "severity_score": 7,
-  "department": "PWD/MCD/DJB/BSES/Delhi Police",
+  "department": "pick from the mapping",
   "urgency": "Immediate/Within 3 days/Within a week",
   "affected_people": 100
 }}
-Only JSON, no explanation.""")
-
-        # LangChain chain — prompt | model | JsonOutputParser
+Only JSON.""")
         chain = prompt | llm | JsonOutputParser()
-        
         data = chain.invoke({
             "issue_title": state["issue_title"],
-            "description": state["description"]
+            "description": state["description"],
         })
-        
         return {
             **state,
             "category": data.get("category", "Other"),
@@ -118,31 +160,28 @@ Only JSON, no explanation.""")
             "severity_score": int(data.get("severity_score", 5)),
             "department": data.get("department", "MCD"),
             "urgency": data.get("urgency", "Within a week"),
-            "affected_people": int(data.get("affected_people", 50))
+            "affected_people": int(data.get("affected_people", 50)),
         }
     except Exception as e:
         print("CATEGORIZE ERROR:", str(e))
         return {
-            **state,
-            "category": "Other",
-            "severity": "Medium",
-            "severity_score": 5,
-            "department": "MCD",
-            "urgency": "Within a week",
-            "affected_people": 50
+            **state, "category": "Other", "severity": "Medium",
+            "severity_score": 5, "department": "MCD",
+            "urgency": "Within a week", "affected_people": 50,
         }
 
-# ─── Node 4: Impact — JsonOutputParser ────────────────────────────────────────
+
+# ─── Node 4: Impact (Groq/Gemini) ──────────────────────────────────────────────
 def impact_node(state: IssueState) -> IssueState:
-    print("📊 Impact Node chal raha hai...")
+    print("📊 Impact Node...")
     try:
         prompt = ChatPromptTemplate.from_template("""
-Calculate impact scores for this civic issue.
+Calculate community impact scores (0-100 each) for this civic issue.
 
 Issue: {issue_title}
 Category: {category}
 Severity: {severity_score}/10
-Affected People: {affected_people}
+Affected people: {affected_people}
 
 Return ONLY this JSON:
 {{
@@ -154,17 +193,14 @@ Return ONLY this JSON:
   "environmental": 55,
   "escalation_needed": true
 }}
-Only JSON, no explanation.""")
-
+Only JSON.""")
         chain = prompt | llm | JsonOutputParser()
-        
         data = chain.invoke({
             "issue_title": state["issue_title"],
             "category": state["category"],
             "severity_score": state["severity_score"],
-            "affected_people": state["affected_people"]
+            "affected_people": state["affected_people"],
         })
-        
         return {
             **state,
             "impact_score": int(data.get("impact_score", 50)),
@@ -173,76 +209,74 @@ Only JSON, no explanation.""")
             "economic_impact": int(data.get("economic_impact", 50)),
             "inconvenience": int(data.get("inconvenience", 50)),
             "environmental": int(data.get("environmental", 50)),
-            "escalation_needed": bool(data.get("escalation_needed", False))
+            "escalation_needed": bool(data.get("escalation_needed", False)),
         }
     except Exception as e:
         print("IMPACT ERROR:", str(e))
         return {
-            **state,
-            "impact_score": 50,
-            "public_safety": 50,
-            "health_risk": 50,
-            "economic_impact": 50,
-            "inconvenience": 50,
-            "environmental": 50,
-            "escalation_needed": False
+            **state, "impact_score": 50, "public_safety": 50,
+            "health_risk": 50, "economic_impact": 50, "inconvenience": 50,
+            "environmental": 50, "escalation_needed": False,
         }
 
-# ─── Node 5: Hinglish — StrOutputParser ───────────────────────────────────────
+
+# ─── Node 5: Hinglish (Groq/Gemini) ────────────────────────────────────────────
 def hinglish_node(state: IssueState) -> IssueState:
-    print("🗣️ Hinglish Node chal raha hai...")
+    print("🗣️ Hinglish Node...")
     try:
         prompt = ChatPromptTemplate.from_template("""
-Yeh civic issue ki summary casual Hinglish mein likho (Roman script, WhatsApp style):
+Write a casual Hinglish summary (Roman script, WhatsApp style) of this civic issue:
 
 Issue: {issue_title}
 Category: {category}
 Severity: {severity}
 Department: {department}
 
-2-3 lines mein likho. Kya problem hai, kitni serious hai, kya karna chahiye.""")
-
-        # Hinglish plain text hai — StrOutputParser use karo
+In 2-3 lines: what the problem is, how serious it is, and who to complain to.
+Write it the way you'd message a friend on WhatsApp.""")
         chain = prompt | llm | StrOutputParser()
-        
         summary = chain.invoke({
             "issue_title": state["issue_title"],
             "category": state["category"],
             "severity": state["severity"],
-            "department": state["department"]
+            "department": state["department"],
         })
-        
         return {**state, "hinglish_summary": summary.strip()}
-    
     except Exception as e:
         print("HINGLISH ERROR:", str(e))
         return {
             **state,
-            "hinglish_summary": f"Bhai {state['issue_title']} ki problem hai. {state['department']} ko complain karo!"
+            "hinglish_summary": (
+                f"Bhai {state['issue_title']} ki problem hai. "
+                f"{state['department']} ko complain karo!"
+            ),
         }
 
-# ─── Graph ────────────────────────────────────────────────────────────────────
+
+# ─── Graph ─────────────────────────────────────────────────────────────────────
 def build_graph():
-    graph = StateGraph(IssueState)
-    
-    graph.add_node("vision_node", vision_node)
-    graph.add_node("validate_node", validate_node)
-    graph.add_node("categorize_node", categorize_node)
-    graph.add_node("impact_node", impact_node)
-    graph.add_node("hinglish_node", hinglish_node)
-    
-    graph.add_edge(START, "vision_node")
-    graph.add_edge("vision_node", "validate_node")
-    graph.add_conditional_edges(
-        "validate_node",
-        is_civic,
-        {"yes": "categorize_node", "no": END}
+    g = StateGraph(IssueState)
+    g.add_node("vision_node", vision_node)
+    g.add_node("validate_node", validate_node)
+    g.add_node("categorize_node", categorize_node)
+    g.add_node("impact_node", impact_node)
+    g.add_node("hinglish_node", hinglish_node)
+
+    g.add_edge(START, "vision_node")
+    g.add_edge("vision_node", "validate_node")
+    g.add_conditional_edges(
+        "validate_node", is_civic,
+        {"yes": "categorize_node", "no": END},
     )
-    graph.add_edge("categorize_node", "impact_node")
-    graph.add_edge("impact_node", "hinglish_node")
-    graph.add_edge("hinglish_node", END)
-    
-    return graph.compile()
+    g.add_edge("categorize_node", "impact_node")
+    g.add_edge("impact_node", "hinglish_node")
+    g.add_edge("hinglish_node", END)
+    return g.compile()
+
 
 nagarseva_graph = build_graph()
+
+# Expose the llm so app.py can reuse it for duplicate detection + insights
+text_llm = llm
+
 print("✅ NagarSeva AI Graph ready!")
