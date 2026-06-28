@@ -130,7 +130,10 @@ with st.sidebar:
             dept = st.selectbox("Department", list(DEPARTMENT_PASSWORDS.keys()), key="off_dept")
             # Show only the demo password for the selected department (clean hint)
             demo_pw = DEPARTMENT_PASSWORDS.get(dept, "")
-            st.caption(f"🔑 Demo password for {dept}: `{demo_pw}`")
+            st.markdown(f'<div style="color:var(--text-muted);font-size:0.82rem;margin:4px 0">'
+                        f'🔑 Demo password for {dept}: '
+                        f'<b style="color:var(--primary)">{demo_pw}</b></div>',
+                        unsafe_allow_html=True)
             pwd = st.text_input("Officer password", type="password", key="off_pwd")
             if st.button("Login", use_container_width=True):
                 if pwd == DEPARTMENT_PASSWORDS.get(dept):
@@ -557,15 +560,13 @@ if not is_officer:
         # ── Process GPS FIRST (before the text widget is created) ──
         gps_msg = None
         if _HAS_GPS:
-            st.markdown('<div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">'
+            st.markdown('<div style="display:flex;align-items:center;gap:10px;margin-bottom:2px">'
                         '<span style="color:var(--text);font-weight:600;font-size:0.92rem">'
                         '📍 Auto-detect my location</span>'
                         '<span style="color:var(--text-dim);font-size:0.82rem">'
                         '— tap the pin, or just type below</span></div>',
                         unsafe_allow_html=True)
-            gcol1, gcol2 = st.columns([1, 8])
-            with gcol1:
-                gps = streamlit_geolocation()
+            gps = streamlit_geolocation()
             if gps and gps.get("latitude") and gps.get("longitude"):
                 glat, glon = gps["latitude"], gps["longitude"]
                 coord_key = f"{glat:.5f},{glon:.5f}"
@@ -829,7 +830,7 @@ if not is_officer:
                         st.session_state.issue_saved = True
                         st.rerun()
                 else:
-                    st.success("✅ Submitted!")
+                    st.success("✅ Saved!")
             with a2:
                 if st.button("📧 Email", use_container_width=True):
                     with st.spinner("Drafting your complaint email..."):

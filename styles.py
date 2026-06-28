@@ -350,6 +350,14 @@ div[data-testid="stTabs"] button[aria-selected="true"] {{
     margin-bottom: 4px !important;
 }}
 
+/* GPS geolocation component (third-party iframe) - shrink + blend its frame */
+iframe[title="streamlit_geolocation.streamlit_geolocation"] {{
+    width: 48px !important;
+    height: 48px !important;
+    border-radius: 12px !important;
+    background: {t['surface']} !important;
+}}
+
 /* ── File uploader ── */
 [data-testid="stFileUploader"] {{
     background: {t['surface']};
