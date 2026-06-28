@@ -350,12 +350,22 @@ div[data-testid="stTabs"] button[aria-selected="true"] {{
     margin-bottom: 4px !important;
 }}
 
-/* GPS geolocation component (third-party iframe) - shrink + blend its frame */
-iframe[title="streamlit_geolocation.streamlit_geolocation"] {{
-    width: 48px !important;
-    height: 48px !important;
-    border-radius: 12px !important;
-    background: {t['surface']} !important;
+/* GPS geolocation component (third-party iframe) - remove its black box */
+iframe[title*="geolocation"],
+iframe[title*="streamlit_geolocation"] {{
+    width: 52px !important;
+    height: 52px !important;
+    border-radius: 14px !important;
+    background: transparent !important;
+}}
+/* The component's wrapper block that carries the dark background */
+.stCustomComponentV1,
+[class*="stCustomComponent"] {{
+    background: transparent !important;
+}}
+div:has(> iframe[title*="geolocation"]) {{
+    background: transparent !important;
+    width: 56px !important;
 }}
 
 /* ── File uploader ── */
