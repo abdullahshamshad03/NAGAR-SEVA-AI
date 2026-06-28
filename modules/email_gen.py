@@ -18,11 +18,11 @@ DEPARTMENT_CONTACTS = {
     "MCD":          {"phone": "155305",       "email": "mcd-ithelpdesk@mcd.nic.in"},
     "DJB":          {"phone": "1916",         "email": "grievances-djb@delhi.gov.in"},
     "BSES":         {"phone": "19123",        "email": "brpl.customercare@reliancegroupindia.com"},
-    "Delhi Police": {"phone": "112",          "email": "delpol.service@delhipolice.gov.in"},
+    "Delhi Police": {"phone": "100",          "email": "delpol.service@delhipolice.gov.in"},
     "Fire Service": {"phone": "101",          "email": "doed.dlfire@nic.in"},
     "Environment":  {"phone": "011-23392306", "email": "msdpcc@nic.in"},
-    "Health":       {"phone": "011-22302441", "email": "dghs@delhi.gov.in"},
-    "Transport":    {"phone": "011-23930763", "email": "commtpt@nic.in"},
+    "Health":       {"phone": "011-23392109", "email": "min.hfwtpt@delhi.gov.in"},
+    "Transport":    {"phone": "011-20833482", "email": "commtpt@nic.in"},
     "Education":    {"phone": "011-23890172", "email": "ddeedu@nic.in"},
 }
 
