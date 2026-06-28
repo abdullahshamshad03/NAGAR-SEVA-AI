@@ -317,6 +317,43 @@ div[data-testid="stTabs"] button[aria-selected="true"] {{
     border-radius: 16px; padding: 1rem;
 }}
 [data-testid="stFileUploader"] * {{ color: {t['text_muted']} !important; }}
+/* Inner dropzone area (the dark box) */
+[data-testid="stFileUploaderDropzone"],
+[data-testid="stFileUploaderDropzone"] > div,
+section[data-testid="stFileUploaderDropzone"] {{
+    background: {t['bg_elevated']} !important;
+    border-radius: 12px !important;
+}}
+[data-testid="stFileUploaderDropzone"] button {{
+    background: {t['surface_hover']} !important;
+    color: {t['text']} !important;
+    border: 1px solid {t['border_strong']} !important;
+}}
+/* Uploaded file pill */
+[data-testid="stFileUploaderFile"] {{
+    background: {t['surface']} !important;
+    color: {t['text']} !important;
+}}
+[data-testid="stFileUploaderFile"] * {{ color: {t['text']} !important; }}
+
+/* ── Select boxes (feed filters) ── */
+[data-baseweb="select"] > div {{
+    background: {t['surface']} !important;
+    border-color: {t['border']} !important;
+    color: {t['text']} !important;
+}}
+[data-baseweb="select"] span {{ color: {t['text']} !important; }}
+[data-baseweb="popover"] li {{
+    background: {t['bg_elevated']} !important;
+    color: {t['text']} !important;
+}}
+
+/* ── Text area (email body) ── */
+[data-testid="stTextArea"] textarea {{
+    background: {t['surface']} !important;
+    color: {t['text']} !important;
+    border: 1px solid {t['border']} !important;
+}}
 
 /* Empty state */
 .empty {{

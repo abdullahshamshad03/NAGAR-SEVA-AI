@@ -21,3 +21,9 @@ plotly
 
 # Environment variables
 python-dotenv
+
+geopy
+pandas
+
+pydeck
+streamlit-geolocation
