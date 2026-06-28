@@ -104,6 +104,48 @@ def get_css(mode: str = "dark") -> str:
 }}
 [data-testid="stSidebar"] * {{ color: {t['text']} !important; }}
 
+/* ── Sidebar toggle button (shadcn-inspired, visible in both themes) ── */
+/* Collapsed-state button (the one shown when sidebar is closed) */
+[data-testid="stSidebarCollapsedControl"] {{
+    background: {t['surface']} !important;
+    border: 1px solid {t['border_strong']} !important;
+    border-radius: 10px !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important;
+    padding: 2px !important;
+    margin: 8px !important;
+    transition: all .15s ease !important;
+}}
+[data-testid="stSidebarCollapsedControl"]:hover {{
+    background: {t['surface_hover']} !important;
+    border-color: {t['primary']} !important;
+    transform: translateY(-1px) !important;
+}}
+[data-testid="stSidebarCollapsedControl"] button {{
+    background: transparent !important;
+    color: {t['text']} !important;
+}}
+[data-testid="stSidebarCollapsedControl"] svg {{
+    fill: {t['text']} !important;
+    color: {t['text']} !important;
+    width: 22px !important; height: 22px !important;
+}}
+/* Open-state collapse button (inside the sidebar header) */
+[data-testid="stSidebar"] [data-testid="stSidebarCollapseButton"],
+[data-testid="stSidebarHeader"] button {{
+    background: {t['surface']} !important;
+    border: 1px solid {t['border_strong']} !important;
+    border-radius: 8px !important;
+}}
+[data-testid="stSidebar"] [data-testid="stSidebarCollapseButton"] svg,
+[data-testid="stSidebarHeader"] button svg {{
+    fill: {t['text']} !important;
+    color: {t['text']} !important;
+}}
+[data-testid="stSidebar"] [data-testid="stSidebarCollapseButton"]:hover {{
+    background: {t['surface_hover']} !important;
+    border-color: {t['primary']} !important;
+}}
+
 /* Generic text color */
 .main p, .main span, .main label, .main div {{ color: {t['text']}; }}
 
@@ -301,11 +343,42 @@ def get_css(mode: str = "dark") -> str:
     border-radius: 12px !important;
 }}
 
-/* ── Tabs ── */
-div[data-testid="stTabs"] button {{ color: {t['text_dim']} !important; font-weight: 600 !important; }}
-div[data-testid="stTabs"] button[aria-selected="true"] {{
-    color: {t['primary']} !important;
-    border-bottom-color: {t['primary']} !important;
+/* ── Tabs (modern pill-style navbar) ── */
+div[data-testid="stTabs"] [data-baseweb="tab-list"] {{
+    gap: 6px !important;
+    background: {t['surface']} !important;
+    padding: 6px !important;
+    border-radius: 14px !important;
+    border: 1px solid {t['border']} !important;
+}}
+div[data-testid="stTabs"] [data-baseweb="tab-list"] button {{
+    color: {t['text_dim']} !important;
+    font-weight: 600 !important;
+    font-size: 0.9rem !important;
+    border-radius: 10px !important;
+    padding: 8px 16px !important;
+    border-bottom: none !important;
+    transition: all .15s ease !important;
+}}
+div[data-testid="stTabs"] [data-baseweb="tab-list"] button:hover {{
+    background: {t['surface_hover']} !important;
+    color: {t['text']} !important;
+}}
+div[data-testid="stTabs"] [data-baseweb="tab-list"] button[aria-selected="true"] {{
+    color: #ffffff !important;
+    background: linear-gradient(135deg, {t['primary']}, {t['primary_hover']}) !important;
+    border-bottom: none !important;
+    box-shadow: 0 2px 8px {t['primary_soft']} !important;
+}}
+div[data-testid="stTabs"] [data-baseweb="tab-list"] button[aria-selected="true"] * {{
+    color: #ffffff !important;
+}}
+/* Hide the default underline highlight bar */
+div[data-testid="stTabs"] [data-baseweb="tab-highlight"] {{
+    background: transparent !important;
+}}
+div[data-testid="stTabs"] [data-baseweb="tab-border"] {{
+    background: transparent !important;
 }}
 
 /* ── Inputs ── */

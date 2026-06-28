@@ -67,6 +67,28 @@ T = THEMES[mode]
 is_officer = st.session_state.role == "officer"
 st.markdown(get_css(mode), unsafe_allow_html=True)
 
+# Grant geolocation (and camera) permission to Streamlit component iframes.
+# Without this, the GPS button and camera fail with "site can't ask for permission".
+st.markdown("""
+<script>
+(function () {
+  function grantIframePerms() {
+    const frames = window.parent.document.querySelectorAll('iframe');
+    frames.forEach(function (f) {
+      const current = f.getAttribute('allow') || '';
+      if (!current.includes('geolocation')) {
+        f.setAttribute('allow', (current + '; geolocation; camera; microphone').trim());
+      }
+    });
+  }
+  grantIframePerms();
+  // Re-apply when Streamlit re-renders (new iframes get added)
+  const obs = new MutationObserver(grantIframePerms);
+  obs.observe(window.parent.document.body, { childList: true, subtree: true });
+})();
+</script>
+""", unsafe_allow_html=True)
+
 st.markdown("""
 <style>
 .role-pill { display:inline-block; padding:4px 14px; border-radius:30px;
@@ -507,12 +529,24 @@ if not is_officer:
                 status_txt, status_color, status_icon = status_display(issue, T)
 
                 # Image + details side by side (social-media style card)
-                img_path = issue.get("image_path")
-                has_img = img_path and os.path.exists(img_path)
+                img_path_raw = issue.get("image_path") or ""
+                # image_path may hold comma-separated paths (multiple photos)
+                img_list = [p for p in img_path_raw.split(",") if p and os.path.exists(p)]
+                has_img = len(img_list) > 0
                 if has_img:
                     ic, dc = st.columns([1, 3], gap="medium")
                     with ic:
-                        st.image(img_path, use_column_width=True)
+                        # Primary photo
+                        st.image(img_list[0], use_column_width=True)
+                        # Extra photos as a small thumbnail gallery
+                        if len(img_list) > 1:
+                            extra = img_list[1:5]  # show up to 4 extra
+                            tcols = st.columns(len(extra))
+                            for ti, tp in enumerate(extra):
+                                with tcols[ti]:
+                                    st.image(tp, use_column_width=True)
+                            if len(img_list) > 5:
+                                st.caption(f"+{len(img_list) - 5} more")
                     detail_col = dc
                 else:
                     detail_col = st.container()
@@ -616,19 +650,37 @@ if not is_officer:
         col1, col2 = st.columns([1, 1], gap="large")
         with col1:
             st.markdown('<div class="step"><div class="step-dot">2</div>'
-                        '<div class="step-text">Add a photo of the issue</div></div>',
+                        '<div class="step-text">Add photo(s) of the issue</div></div>',
                         unsafe_allow_html=True)
-            # Upload OR take a photo with the camera
+            # Upload one or more images, OR take a photo with the camera
             up_tab, cam_tab = st.tabs(["📁 Upload", "📷 Take Photo"])
             with up_tab:
-                file_up = st.file_uploader("upload", type=["jpg", "jpeg", "png", "webp"],
-                                           label_visibility="collapsed")
+                file_ups = st.file_uploader(
+                    "upload", type=["jpg", "jpeg", "png", "webp"],
+                    accept_multiple_files=True, label_visibility="collapsed")
             with cam_tab:
                 cam_up = st.camera_input("Take a photo", label_visibility="collapsed")
-            # Whichever was provided becomes the image to analyze
-            uploaded = cam_up if cam_up is not None else file_up
-            if uploaded:
-                st.image(Image.open(uploaded), use_column_width=True)
+
+            # Build the list of images (camera first, then uploads)
+            all_images = []
+            if cam_up is not None:
+                all_images.append(cam_up)
+            if file_ups:
+                all_images.extend(file_ups)
+
+            # The first image is the one the AI analyzes; the rest are extra proof
+            uploaded = all_images[0] if all_images else None
+
+            if all_images:
+                st.caption(f"📸 {len(all_images)} photo(s) added"
+                           + (" — first one is used for AI analysis" if len(all_images) > 1 else ""))
+                # Show thumbnails in a row
+                thumb_cols = st.columns(min(len(all_images), 4))
+                for idx, img in enumerate(all_images[:4]):
+                    with thumb_cols[idx]:
+                        st.image(Image.open(img), use_column_width=True)
+                if len(all_images) > 4:
+                    st.caption(f"+ {len(all_images) - 4} more")
             st.markdown("<br>", unsafe_allow_html=True)
             analyze_btn = st.button("🚀 Analyze with AI", use_container_width=True, type="primary")
 
@@ -794,7 +846,7 @@ if not is_officer:
             a1, a2, a3, a4 = st.columns(4)
             with a1:
                 if not st.session_state.issue_saved:
-                    if st.button("💾 Save Issue", use_container_width=True):
+                    if st.button("Submit", use_container_width=True):
                         pending = get_pending_issues()
                         new_issue = {"issue_title": r["issue_title"], "category": r["category"],
                                      "location": location or r["location_hints"],
@@ -807,16 +859,19 @@ if not is_officer:
                             # Geocode the location (Delhi area → coordinates)
                             coords = geocode_location(location or r["location_hints"])
                             lat, lon = (coords if coords else (None, None))
-                            # Save the uploaded image to disk for the community feed
-                            img_path = None
+                            # Save ALL uploaded images to disk (first is primary)
+                            saved_paths = []
                             try:
-                                if uploaded is not None:
-                                    ext = uploaded.name.split(".")[-1].lower()
-                                    img_path = os.path.join(UPLOAD_DIR, f"{uuid.uuid4().hex}.{ext}")
-                                    Image.open(uploaded).convert("RGB").save(img_path)
+                                for img in all_images:
+                                    ext = (img.name.split(".")[-1].lower()
+                                           if getattr(img, "name", None) else "png")
+                                    p = os.path.join(UPLOAD_DIR, f"{uuid.uuid4().hex}.{ext}")
+                                    Image.open(img).convert("RGB").save(p)
+                                    saved_paths.append(p)
                             except Exception as e:
                                 print("IMAGE SAVE ERROR:", str(e))
-                                img_path = None
+                            # Store as comma-separated paths (primary first)
+                            img_path = ",".join(saved_paths) if saved_paths else None
                             save_issue({
                                 "issue_title": r["issue_title"], "category": r["category"],
                                 "severity": r["severity"], "severity_score": r["severity_score"],
@@ -830,7 +885,7 @@ if not is_officer:
                         st.session_state.issue_saved = True
                         st.rerun()
                 else:
-                    st.success("✅ Saved!")
+                    st.success("✅ Submitted!")
             with a2:
                 if st.button("📧 Email", use_container_width=True):
                     with st.spinner("Drafting your complaint email..."):
