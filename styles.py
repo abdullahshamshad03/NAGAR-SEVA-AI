@@ -317,6 +317,39 @@ div[data-testid="stTabs"] button[aria-selected="true"] {{
 }}
 [data-testid="stTextInput"] input::placeholder {{ color: {t['text_dim']} !important; }}
 
+/* Password field wrapper + the show/hide eye button (baseweb) */
+[data-testid="stTextInput"] [data-baseweb="input"],
+[data-testid="stTextInput"] [data-baseweb="base-input"] {{
+    background: {t['surface']} !important;
+    border-radius: 10px !important;
+}}
+[data-testid="stTextInput"] [data-baseweb="input"] input {{
+    background: {t['surface']} !important;
+    color: {t['text']} !important;
+}}
+/* The eye/reveal icon button on password inputs */
+[data-testid="stTextInput"] button,
+[data-testid="stTextInput"] [role="button"] {{
+    background: {t['surface']} !important;
+    color: {t['text']} !important;
+}}
+[data-testid="stTextInput"] button svg,
+[data-testid="stTextInput"] [role="button"] svg {{
+    fill: {t['text_muted']} !important;
+    color: {t['text_muted']} !important;
+}}
+
+/* Widget labels (Your name / Location / Mobile) - keep them clear, no overlap */
+[data-testid="stWidgetLabel"],
+[data-testid="stWidgetLabel"] p,
+[data-testid="stWidgetLabel"] label {{
+    color: {t['text']} !important;
+    font-weight: 600 !important;
+    font-size: 0.9rem !important;
+    opacity: 1 !important;
+    margin-bottom: 4px !important;
+}}
+
 /* ── File uploader ── */
 [data-testid="stFileUploader"] {{
     background: {t['surface']};
