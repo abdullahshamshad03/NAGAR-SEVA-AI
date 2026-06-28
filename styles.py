@@ -275,13 +275,20 @@ def get_css(mode: str = "dark") -> str:
 /* ── Buttons ── */
 .stButton > button {{
     background: linear-gradient(135deg, {t['primary']}, {t['primary_hover']}) !important;
-    color: #fff !important;
+    color: #ffffff !important;
     border: none !important;
     border-radius: 12px !important;
     padding: 0.65rem 1.8rem !important;
     font-weight: 600 !important;
     font-size: 0.95rem !important;
     transition: transform .15s, box-shadow .15s !important;
+    opacity: 1 !important;
+}}
+.stButton > button p,
+.stButton > button span,
+.stButton > button div {{
+    color: #ffffff !important;
+    opacity: 1 !important;
 }}
 .stButton > button:hover {{
     transform: translateY(-1px) !important;
