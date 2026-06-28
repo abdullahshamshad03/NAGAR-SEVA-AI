@@ -343,6 +343,32 @@ section[data-testid="stFileUploaderDropzone"] {{
 }}
 [data-testid="stFileUploaderFile"] * {{ color: {t['text']} !important; }}
 
+/* ── Fix Material-icon text leaking on newer Streamlit (deploy) ── */
+/* Force the icon font to render as icons, not raw text like "arrow_right" */
+span[data-testid="stIconMaterial"],
+[data-testid="stExpanderToggleIcon"],
+.material-symbols-rounded,
+[data-testid="stFileUploaderDropzone"] [data-testid="stIconMaterial"] {{
+    font-family: 'Material Symbols Rounded', 'Material Symbols Outlined' !important;
+    font-weight: normal !important;
+    font-style: normal !important;
+    line-height: 1 !important;
+    letter-spacing: normal !important;
+    text-transform: none !important;
+    white-space: nowrap !important;
+    word-wrap: normal !important;
+    direction: ltr !important;
+    -webkit-font-feature-settings: 'liga' !important;
+    -webkit-font-smoothing: antialiased !important;
+}}
+/* If the icon font fails to load, hide the raw fallback text so it doesn't
+   overlap labels (better a missing icon than "arrow_right" over text). */
+@font-face {{
+    font-family: 'Material Symbols Rounded';
+    font-style: normal;
+    src: local('Material Symbols Rounded');
+}}
+
 /* ── Select boxes (feed filters) ── */
 [data-baseweb="select"] > div {{
     background: {t['surface']} !important;
