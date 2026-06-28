@@ -557,7 +557,13 @@ if not is_officer:
         # ── Process GPS FIRST (before the text widget is created) ──
         gps_msg = None
         if _HAS_GPS:
-            gcol1, gcol2 = st.columns([1, 6])
+            st.markdown('<div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">'
+                        '<span style="color:var(--text);font-weight:600;font-size:0.92rem">'
+                        '📍 Auto-detect my location</span>'
+                        '<span style="color:var(--text-dim);font-size:0.82rem">'
+                        '— tap the pin, or just type below</span></div>',
+                        unsafe_allow_html=True)
+            gcol1, gcol2 = st.columns([1, 8])
             with gcol1:
                 gps = streamlit_geolocation()
             if gps and gps.get("latitude") and gps.get("longitude"):
@@ -575,9 +581,6 @@ if not is_officer:
                     else:
                         gps_msg = ("warn", "📍 You appear to be outside Delhi NCR. "
                                    "NagarSeva AI currently serves Delhi NCR only.")
-            with gcol2:
-                st.caption("👆 Tap the pin to auto-fill your location, "
-                           "or just type it below.")
 
         d1, d2 = st.columns(2)
         with d1:
@@ -790,7 +793,7 @@ if not is_officer:
             a1, a2, a3, a4 = st.columns(4)
             with a1:
                 if not st.session_state.issue_saved:
-                    if st.button("Submit", use_container_width=True):
+                    if st.button("💾 Save Issue", use_container_width=True):
                         pending = get_pending_issues()
                         new_issue = {"issue_title": r["issue_title"], "category": r["category"],
                                      "location": location or r["location_hints"],
@@ -826,7 +829,7 @@ if not is_officer:
                         st.session_state.issue_saved = True
                         st.rerun()
                 else:
-                    st.success("✅ Saved!")
+                    st.success("✅ Submitted!")
             with a2:
                 if st.button("📧 Email", use_container_width=True):
                     with st.spinner("Drafting your complaint email..."):

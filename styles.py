@@ -369,6 +369,33 @@ span[data-testid="stIconMaterial"],
     src: local('Material Symbols Rounded');
 }}
 
+/* ── Expander (Login as Officer / Emergency SOS) ── */
+[data-testid="stExpander"] {{
+    background: {t['surface']} !important;
+    border: 1px solid {t['border']} !important;
+    border-radius: 12px !important;
+    overflow: hidden !important;
+}}
+[data-testid="stExpander"] summary,
+[data-testid="stExpander"] details > summary {{
+    background: {t['surface']} !important;
+    color: {t['text']} !important;
+    font-weight: 600 !important;
+    padding: 0.7rem 1rem !important;
+}}
+[data-testid="stExpander"] summary:hover {{
+    background: {t['surface_hover']} !important;
+}}
+[data-testid="stExpander"] summary p,
+[data-testid="stExpander"] summary span,
+[data-testid="stExpander"] summary svg {{
+    color: {t['text']} !important;
+    fill: {t['text']} !important;
+}}
+[data-testid="stExpander"] [data-testid="stExpanderDetails"] {{
+    background: {t['surface']} !important;
+}}
+
 /* ── Select boxes (feed filters) ── */
 [data-baseweb="select"] > div {{
     background: {t['surface']} !important;
