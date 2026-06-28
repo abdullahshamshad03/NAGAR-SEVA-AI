@@ -808,9 +808,6 @@ if not is_officer:
                     f'<div class="drow"><span class="dlabel">🎯 AI Confidence</span><span class="dval">{conf}%</span></div>'
                     f'<div class="drow"><span class="dlabel">🚨 Escalation</span><span class="dval">{esc}</span></div></div>',
                     unsafe_allow_html=True)
-                if r.get("hinglish_summary"):
-                    st.markdown(f'<div class="highlight"><div class="highlight-label">🗣️ In Hinglish</div>'
-                                f'{r["hinglish_summary"]}</div>', unsafe_allow_html=True)
 
             with right:
                 cats = ["Public Safety", "Health Risk", "Economic", "Inconvenience", "Environmental"]
@@ -846,7 +843,7 @@ if not is_officer:
             a1, a2, a3, a4 = st.columns(4)
             with a1:
                 if not st.session_state.issue_saved:
-                    if st.button("Submit", use_container_width=True):
+                    if st.button("💾 Save Issue", use_container_width=True):
                         pending = get_pending_issues()
                         new_issue = {"issue_title": r["issue_title"], "category": r["category"],
                                      "location": location or r["location_hints"],
@@ -885,7 +882,7 @@ if not is_officer:
                         st.session_state.issue_saved = True
                         st.rerun()
                 else:
-                    st.success("✅ Submitted!")
+                    st.success("✅ Saved!")
             with a2:
                 if st.button("📧 Email", use_container_width=True):
                     with st.spinner("Drafting your complaint email..."):

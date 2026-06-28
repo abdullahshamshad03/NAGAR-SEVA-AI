@@ -369,7 +369,6 @@ def build_graph():
     g.add_node("validate_node", validate_node)
     g.add_node("categorize_node", categorize_node)
     g.add_node("impact_node", impact_node)
-    g.add_node("hinglish_node", hinglish_node)
 
     g.add_edge(START, "vision_node")
     g.add_edge("vision_node", "validate_node")
@@ -378,8 +377,7 @@ def build_graph():
         {"yes": "categorize_node", "no": END},
     )
     g.add_edge("categorize_node", "impact_node")
-    g.add_edge("impact_node", "hinglish_node")
-    g.add_edge("hinglish_node", END)
+    g.add_edge("impact_node", END)
     return g.compile()
 
 
