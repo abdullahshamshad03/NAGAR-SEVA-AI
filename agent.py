@@ -1,3 +1,18 @@
+"""
+LangGraph agent pipeline for NagarSeva AI.
+
+Flow:
+  START → vision → validate ─(civic?)─→ categorize → impact → hinglish → END
+                              └(not civic)──────────────────────────────→ END
+
+Model setup:
+  - Vision  : Gemini (google-generativeai) — handles the image directly.
+  - Text    : Groq (testing) — categorize / impact / hinglish.
+  ⚠️ DEPLOY: switch `llm` to ChatGoogleGenerativeAI("gemini-2.5-flash-lite").
+
+Duplicate detection runs OUTSIDE the graph (in app.py at save time), because
+it needs the database which is a UI-side concern.
+"""
 
 import json
 import os
@@ -174,13 +189,25 @@ Visual severity (judged from the actual photo by our vision system): {visual_sev
 
 Use this STRICT department mapping (pick the single best fit):
 - Potholes, road damage, broken roads, footpaths, bridges → "PWD"
-- Garbage, waste piles, sanitation, dirty public areas, dead animals → "MCD"
-- Water leakage, pipe burst, sewage, drainage, water supply → "DJB"
+- Garbage piles, waste, litter, sanitation, dirty public areas, dead animals,
+  overflowing dustbins, street garbage, garbage DUMPS, landfills, accumulated
+  waste, trash mounds — of ANY size, near homes/city/anywhere on land → "MCD"
+  (DEFAULT for ALL solid garbage/waste. A garbage dump or landfill is solid-waste
+  management, which is ALWAYS MCD — even if it is "massive", "near a residential
+  area", or described as an "environmental hazard" or "health risk". Do NOT send
+  garbage dumps to Environment. Garbage on land = MCD, no exceptions.)
+- Water leakage, pipe burst, sewage, drainage, water supply, waterlogging,
+  standing/stagnant water on roads, flooding, blocked drains → "DJB"
+  (waterlogging and standing water are drainage problems = DJB, even if some
+  garbage/debris is also floating in the water)
 - Streetlight not working, electricity, power lines, exposed/hanging wires → "BSES"
 - Traffic jam, illegal parking, encroachment, road obstruction → "Delhi Police"
 - Fire, burnt building, fire hazard, smoke, gas leak → "Fire Service"
-- Large garbage dumps polluting rivers/drains, industrial pollution, air/noise
-  pollution, open dumping into water bodies, hazardous waste → "Environment"
+- Use "Environment" ONLY for pollution of AIR or WATER bodies, never for solid
+  garbage on land: industrial liquid waste discharged INTO a river/canal/drain,
+  visibly contaminated water bodies, thick smog/air pollution, or chemical/
+  hazardous-material spills. If the photo shows solid garbage/trash/a dump on the
+  ground, it is "MCD", never "Environment".
 - Public hospital/clinic issues, disease outbreak, mosquito breeding, unsanitary
   food/health hazard, medical waste → "Health"
 - Broken/damaged public buses, bus stops, auto/taxi issues, vehicle-related

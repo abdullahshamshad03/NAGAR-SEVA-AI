@@ -61,6 +61,43 @@ for k in ["result", "issue_saved", "email", "dup_info", "whatsapp", "insights"]:
         st.session_state[k] = None
 if "issue_saved" not in st.session_state:
     st.session_state.issue_saved = False
+# Rate limiting: track recent analyze timestamps (per session)
+if "analyze_times" not in st.session_state:
+    st.session_state.analyze_times = []
+
+# ── Rate limit config ──
+RATE_LIMIT_PER_MIN = 3      # max analyses per rolling 60 seconds
+RATE_LIMIT_PER_SESSION = 15  # max analyses per session (abuse guard)
+
+
+def check_rate_limit():
+    """Returns (allowed, message). Uses a rolling 60-second window + session cap."""
+    import time
+    now = time.time()
+    # Drop timestamps older than 60s
+    st.session_state.analyze_times = [
+        t for t in st.session_state.analyze_times if now - t < 60]
+    recent = len(st.session_state.analyze_times)
+    total = st.session_state.get("analyze_total", 0)
+
+    if total >= RATE_LIMIT_PER_SESSION:
+        return (False, "🛑 You've reached the limit of "
+                f"{RATE_LIMIT_PER_SESSION} analyses for this session. "
+                "Please refresh the page to continue. This keeps the service "
+                "fair and available for everyone.")
+    if recent >= RATE_LIMIT_PER_MIN:
+        wait = int(60 - (now - st.session_state.analyze_times[0]))
+        return (False, f"⏳ You're going a bit fast! Please wait {wait} second(s) "
+                f"before analyzing again. (Max {RATE_LIMIT_PER_MIN} per minute.)")
+    return (True, "")
+
+
+def record_analyze():
+    """Record one analyze call against the rate limiter."""
+    import time
+    st.session_state.analyze_times.append(time.time())
+    st.session_state.analyze_total = st.session_state.get("analyze_total", 0) + 1
+
 
 mode = st.session_state.theme
 T = THEMES[mode]
@@ -737,12 +774,19 @@ if not is_officer:
                 st.error(f"📍 {loc_check['message']}")
                 st.stop()
 
+            # Rate limit — protects the AI quota and keeps the service fair
+            allowed, rl_msg = check_rate_limit()
+            if not allowed:
+                st.warning(rl_msg)
+                st.stop()
+            record_analyze()
+
             image = Image.open(uploaded)
             steps = ["🔍 Scanning your photo... (our AI is working hard, promise 😎)",
                      "🛡️ Checking it's a real civic issue...",
                      "🏷️ Figuring out what's broken...",
                      "📊 Crunching the impact numbers...",
-                     "Analysing with AI... 🍵"]
+                     "🗣️ Cooking up some desi gyaan... 🍵"]
             prog = st.progress(0); status = st.empty()
             for i, s in enumerate(steps):
                 status.markdown(f'<p style="color:var(--primary)">{s}</p>', unsafe_allow_html=True)
