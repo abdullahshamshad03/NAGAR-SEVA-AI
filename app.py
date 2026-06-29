@@ -811,7 +811,23 @@ if not is_officer:
             st.session_state.dup_info = None
 
             if result.get("error") and not result.get("is_civic_issue"):
-                st.error(f"❌ {result['error']}")
+                raw_err = str(result.get("error", ""))
+                # Friendly message for common errors (esp. Gemini quota)
+                if "429" in raw_err or "quota" in raw_err.lower() or "RESOURCE_EXHAUSTED" in raw_err:
+                    st.warning(
+                        "⏳ **Daily AI limit reached for now.**\n\n"
+                        "This live demo runs on the Gemini API free tier, which allows a "
+                        "limited number of analyses per day. The limit resets automatically "
+                        "after a short while (and fully the next day).\n\n"
+                        "The app is working perfectly — this is just a free-tier quota limit, "
+                        "not an error. Please try again in a little while. 🙏")
+                elif "api" in raw_err.lower() and "key" in raw_err.lower():
+                    st.error("🔑 There's an issue with the AI service configuration. "
+                             "Please try again shortly.")
+                else:
+                    st.error("⚠️ Something went wrong while analyzing the photo. "
+                             "Please try again in a moment.")
+                st.session_state.result = None
             elif not result.get("is_civic_issue"):
                 reason = result.get("rejection_reason") or "This doesn't look like a civic issue."
                 st.warning(f"🚫 {reason}\n\nPlease upload a clear photo of a real civic problem — "

@@ -188,7 +188,10 @@ Location: {location}
 Visual severity (judged from the actual photo by our vision system): {visual_severity}
 
 Use this STRICT department mapping (pick the single best fit):
-- Potholes, road damage, broken roads, footpaths, bridges → "PWD"
+- Potholes, road damage, broken/cracked roads, damaged footpaths, bridges,
+  road surface problems, manholes on roads → "PWD"
+  (ALL road and pothole issues are PWD — never MCD. Potholes = PWD, always.
+  MCD handles garbage; PWD handles roads. A pothole is a road problem = PWD.)
 - Garbage piles, waste, litter, sanitation, dirty public areas, dead animals,
   overflowing dustbins, street garbage, garbage DUMPS, landfills, accumulated
   waste, trash mounds — of ANY size, near homes/city/anywhere on land → "MCD"
