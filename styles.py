@@ -29,6 +29,7 @@ THEMES = {
         "grad_3":        "#1e2747",
         "chart_bg":      "#12141c",
         "shadow":        "0 4px 24px rgba(0,0,0,0.4)",
+        "alert_text":    "#f1f3f9",
     },
     "light": {
         "bg":            "#f7f8fc",
@@ -53,6 +54,7 @@ THEMES = {
         "grad_3":        "#dbe4ff",
         "chart_bg":      "#ffffff",
         "shadow":        "0 4px 20px rgba(20,30,80,0.08)",
+        "alert_text":    "#11141d",    
     },
 }
 
@@ -548,6 +550,20 @@ span[data-testid="stIconMaterial"],
 }}
 .empty-icon {{ font-size: 3rem; }}
 .empty-text {{ color: {t['text_muted']}; margin-top: 1rem; }}
+
+/* ── Alerts (warning / error / info / success) - readable text in both themes ── */
+[data-testid="stAlert"] {{
+    border-radius: 12px !important;
+}}
+[data-testid="stAlert"] p,
+[data-testid="stAlert"] div,
+[data-testid="stAlert"] span,
+[data-testid="stAlertContentWarning"],
+[data-testid="stAlertContentError"],
+[data-testid="stAlertContentInfo"],
+[data-testid="stAlertContentSuccess"] {{
+    color: {t['alert_text']} !important;
+}}
 
 /* scrollbar */
 ::-webkit-scrollbar {{ width: 8px; height: 8px; }}
