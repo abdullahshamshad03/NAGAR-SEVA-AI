@@ -1,0 +1,11 @@
+# Don't upload these to Cloud Build
+venv311/
+venv/
+__pycache__/
+*.pyc
+.env
+nagarseva.db
+issue_images/
+.git/
+.gitignore
+*.md

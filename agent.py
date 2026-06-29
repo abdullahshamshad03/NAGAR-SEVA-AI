@@ -1,18 +1,3 @@
-"""
-LangGraph agent pipeline for NagarSeva AI.
-
-Flow:
-  START → vision → validate ─(civic?)─→ categorize → impact → hinglish → END
-                              └(not civic)──────────────────────────────→ END
-
-Model setup:
-  - Vision  : Gemini (google-generativeai) — handles the image directly.
-  - Text    : Groq (testing) — categorize / impact / hinglish.
-  ⚠️ DEPLOY: switch `llm` to ChatGoogleGenerativeAI("gemini-2.5-flash-lite").
-
-Duplicate detection runs OUTSIDE the graph (in app.py at save time), because
-it needs the database which is a UI-side concern.
-"""
 
 import json
 import os
@@ -24,18 +9,18 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import JsonOutputParser, StrOutputParser
 import google.generativeai as genai
 
-# ── Testing model (Groq). DEPLOY: comment this out, use the Gemini line below. ──
-from langchain_groq import ChatGroq
+# ── Text model: Gemini (deployment). ──
+from langchain_google_genai import ChatGoogleGenerativeAI
 
 load_dotenv()
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
-# TESTING — Groq for text nodes
-llm = ChatGroq(model="llama-3.3-70b-versatile", temperature=0)
+# DEPLOY — Gemini for all text nodes (categorize / impact)
+llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash-lite", temperature=0)
 
-# DEPLOY — uncomment these two lines and remove the Groq line above:
-# from langchain_google_genai import ChatGoogleGenerativeAI
-# llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash-lite", temperature=0)
+# TESTING ONLY (Groq, to save Gemini quota) — keep commented for deploy:
+# from langchain_groq import ChatGroq
+# llm = ChatGroq(model="llama-3.3-70b-versatile", temperature=0)
 
 VISION_MODEL = "gemini-2.5-flash-lite"
 

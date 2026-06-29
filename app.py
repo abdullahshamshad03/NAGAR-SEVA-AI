@@ -537,14 +537,14 @@ if not is_officer:
                     ic, dc = st.columns([1, 3], gap="medium")
                     with ic:
                         # Primary photo
-                        st.image(img_list[0], use_column_width=True)
+                        st.image(img_list[0], use_container_width=True)
                         # Extra photos as a small thumbnail gallery
                         if len(img_list) > 1:
                             extra = img_list[1:5]  # show up to 4 extra
                             tcols = st.columns(len(extra))
                             for ti, tp in enumerate(extra):
                                 with tcols[ti]:
-                                    st.image(tp, use_column_width=True)
+                                    st.image(tp, use_container_width=True)
                             if len(img_list) > 5:
                                 st.caption(f"+{len(img_list) - 5} more")
                     detail_col = dc
@@ -678,7 +678,7 @@ if not is_officer:
                 thumb_cols = st.columns(min(len(all_images), 4))
                 for idx, img in enumerate(all_images[:4]):
                     with thumb_cols[idx]:
-                        st.image(Image.open(img), use_column_width=True)
+                        st.image(Image.open(img), use_container_width=True)
                 if len(all_images) > 4:
                     st.caption(f"+ {len(all_images) - 4} more")
             st.markdown("<br>", unsafe_allow_html=True)
