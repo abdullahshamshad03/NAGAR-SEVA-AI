@@ -77,6 +77,7 @@ def seed_demo_issues():
             "location": "Saket", "reporter": "Rohit Sharma", "mobile": "9810012345",
             "affected_people": 320, "impact_score": 78, "upvotes": 14,
             "lat": 28.5245, "lon": 77.2066,
+            "image_path": "seed_images/pothole.png",
         },
         {
             "issue_title": "Overflowing garbage near residential area",
@@ -88,6 +89,7 @@ def seed_demo_issues():
             "location": "Lajpat Nagar", "reporter": "Priya Verma", "mobile": "9811023456",
             "affected_people": 250, "impact_score": 70, "upvotes": 9,
             "lat": 28.5677, "lon": 77.2433,
+            "image_path": "seed_images/garbage.png",
         },
         {
             "issue_title": "Streetlight not working at night",
@@ -99,6 +101,7 @@ def seed_demo_issues():
             "location": "Dwarka", "reporter": "Amit Kumar", "mobile": "9812034567",
             "affected_people": 140, "impact_score": 52, "upvotes": 6,
             "lat": 28.5921, "lon": 77.0460,
+            "image_path": "seed_images/streetlight.png",
         },
         {
             "issue_title": "Water logging after rain",
@@ -110,6 +113,7 @@ def seed_demo_issues():
             "location": "Rohini", "reporter": "Sneha Gupta", "mobile": "9813045678",
             "affected_people": 410, "impact_score": 74, "upvotes": 11,
             "lat": 28.7410, "lon": 77.0660,
+            "image_path": "seed_images/waterlogging.png",
         },
     ]
     for d in demo:
@@ -117,13 +121,13 @@ def seed_demo_issues():
             INSERT INTO issues
             (issue_title, category, severity, severity_score, department,
              description, location, reporter, mobile, affected_people,
-             impact_score, upvotes, lat, lon, created_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+             impact_score, upvotes, lat, lon, image_path, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (
             d["issue_title"], d["category"], d["severity"], d["severity_score"],
             d["department"], d["description"], d["location"], d["reporter"],
             d["mobile"], d["affected_people"], d["impact_score"], d["upvotes"],
-            d["lat"], d["lon"], _now(),
+            d["lat"], d["lon"], d["image_path"], _now(),
         ))
     conn.commit()
     conn.close()
