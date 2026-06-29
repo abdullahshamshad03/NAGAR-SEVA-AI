@@ -537,14 +537,14 @@ if not is_officer:
                     ic, dc = st.columns([1, 3], gap="medium")
                     with ic:
                         # Primary photo
-                        st.image(img_list[0], use_container_width=True)
+                        st.image(img_list[0], use_column_width=True)
                         # Extra photos as a small thumbnail gallery
                         if len(img_list) > 1:
                             extra = img_list[1:5]  # show up to 4 extra
                             tcols = st.columns(len(extra))
                             for ti, tp in enumerate(extra):
                                 with tcols[ti]:
-                                    st.image(tp, use_container_width=True)
+                                    st.image(tp, use_column_width=True)
                             if len(img_list) > 5:
                                 st.caption(f"+{len(img_list) - 5} more")
                     detail_col = dc
@@ -742,7 +742,7 @@ if not is_officer:
                      "🛡️ Checking it's a real civic issue...",
                      "🏷️ Figuring out what's broken...",
                      "📊 Crunching the impact numbers...",
-                     "🗣️ Cooking up some desi gyaan... 🍵"]
+                     "Analysing with AI... 🍵"]
             prog = st.progress(0); status = st.empty()
             for i, s in enumerate(steps):
                 status.markdown(f'<p style="color:var(--primary)">{s}</p>', unsafe_allow_html=True)
