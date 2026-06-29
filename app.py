@@ -678,7 +678,7 @@ if not is_officer:
                 thumb_cols = st.columns(min(len(all_images), 4))
                 for idx, img in enumerate(all_images[:4]):
                     with thumb_cols[idx]:
-                        st.image(Image.open(img), use_container_width=True)
+                        st.image(Image.open(img), use_column_width=True)
                 if len(all_images) > 4:
                     st.caption(f"+ {len(all_images) - 4} more")
             st.markdown("<br>", unsafe_allow_html=True)
