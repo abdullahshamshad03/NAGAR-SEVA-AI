@@ -50,6 +50,83 @@ def init_db():
     ''')
     conn.commit()
     conn.close()
+    # Seed a few realistic demo issues if the database is empty (for live demos)
+    seed_demo_issues()
+
+
+def seed_demo_issues():
+    """Insert a few realistic Delhi NCR issues if the DB has none.
+    Keeps the live demo populated even after a container restart.
+    No AI calls — these are pre-written, so they don't use any quota."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM issues")
+    count = cursor.fetchone()[0]
+    if count > 0:
+        conn.close()
+        return  # already has data, don't seed
+
+    demo = [
+        {
+            "issue_title": "Large pothole on main road",
+            "category": "Road", "severity": "High", "severity_score": 8,
+            "department": "PWD",
+            "description": "A deep pothole has formed on the main road near the market, "
+                           "causing two-wheelers to swerve dangerously. It worsens after rain "
+                           "and poses a serious risk to commuters during peak hours.",
+            "location": "Saket", "reporter": "Rohit Sharma", "mobile": "9810012345",
+            "affected_people": 320, "impact_score": 78, "upvotes": 14,
+            "lat": 28.5245, "lon": 77.2066,
+        },
+        {
+            "issue_title": "Overflowing garbage near residential area",
+            "category": "Garbage", "severity": "High", "severity_score": 7,
+            "department": "MCD",
+            "description": "Garbage has been piling up at the street corner for several days. "
+                           "It is overflowing onto the footpath, attracting stray animals and "
+                           "creating a foul smell for nearby residents.",
+            "location": "Lajpat Nagar", "reporter": "Priya Verma", "mobile": "9811023456",
+            "affected_people": 250, "impact_score": 70, "upvotes": 9,
+            "lat": 28.5677, "lon": 77.2433,
+        },
+        {
+            "issue_title": "Streetlight not working at night",
+            "category": "Electricity", "severity": "Medium", "severity_score": 5,
+            "department": "BSES",
+            "description": "The streetlight on this lane has been out for over a week. "
+                           "The stretch is completely dark at night, making it unsafe for "
+                           "pedestrians and especially women returning home late.",
+            "location": "Dwarka", "reporter": "Amit Kumar", "mobile": "9812034567",
+            "affected_people": 140, "impact_score": 52, "upvotes": 6,
+            "lat": 28.5921, "lon": 77.0460,
+        },
+        {
+            "issue_title": "Water logging after rain",
+            "category": "Waterlogging", "severity": "High", "severity_score": 7,
+            "department": "DJB",
+            "description": "Rainwater collects and stagnates on this stretch because the "
+                           "drain is blocked. Pedestrians have to wade through dirty water, "
+                           "and it stays for days, becoming a breeding ground for mosquitoes.",
+            "location": "Rohini", "reporter": "Sneha Gupta", "mobile": "9813045678",
+            "affected_people": 410, "impact_score": 74, "upvotes": 11,
+            "lat": 28.7410, "lon": 77.0660,
+        },
+    ]
+    for d in demo:
+        cursor.execute('''
+            INSERT INTO issues
+            (issue_title, category, severity, severity_score, department,
+             description, location, reporter, mobile, affected_people,
+             impact_score, upvotes, lat, lon, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (
+            d["issue_title"], d["category"], d["severity"], d["severity_score"],
+            d["department"], d["description"], d["location"], d["reporter"],
+            d["mobile"], d["affected_people"], d["impact_score"], d["upvotes"],
+            d["lat"], d["lon"], _now(),
+        ))
+    conn.commit()
+    conn.close()
 
 
 def save_issue(data: dict) -> int:
